@@ -6,12 +6,10 @@ import { Instagram, Gift, ExternalLink, RefreshCw, CheckCircle2 } from 'lucide-r
 
 interface InstagramScreenProps {
   onRestartGame: () => void;
-  onSwitchToHost: () => void;
 }
 
 export const InstagramScreen: React.FC<InstagramScreenProps> = ({
   onRestartGame,
-  onSwitchToHost,
 }) => {
   const handleFollowClick = () => {
     window.open(APP_CONFIG.INSTAGRAM_PROFILE_URL, '_blank', 'noopener,noreferrer');
@@ -22,12 +20,6 @@ export const InstagramScreen: React.FC<InstagramScreenProps> = ({
       {/* Top Header */}
       <header className="flex items-center justify-between pb-3 border-b-4 border-[#141414]">
         <BrandLogo size="sm" lightMode={true} />
-        <button
-          onClick={onSwitchToHost}
-          className="text-xs font-black uppercase text-[#141414] bg-white px-2 py-1 border-2 border-[#141414] shadow-[2px_2px_0px_0px_#141414] hover:bg-[#FF6633] hover:text-white transition"
-        >
-          Host Laptop View
-        </button>
       </header>
 
       {/* Main Content */}

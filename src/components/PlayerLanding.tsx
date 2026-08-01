@@ -6,25 +6,17 @@ import { Play, Flame, ShieldAlert, Timer, Sparkles, Lightbulb } from 'lucide-rea
 interface PlayerLandingProps {
   sessionCode?: string;
   onStartGame: () => void;
-  onSwitchToHost: () => void;
 }
 
 export const PlayerLanding: React.FC<PlayerLandingProps> = ({
   sessionCode,
   onStartGame,
-  onSwitchToHost,
 }) => {
   return (
     <div className="min-h-screen bg-[#F3F4F6] text-[#141414] flex flex-col justify-between p-4 sm:p-6 font-sans selection:bg-[#FF6633] selection:text-white">
       {/* Top Header */}
       <header className="flex items-center justify-between pb-3 border-b-4 border-[#141414]">
         <BrandLogo size="sm" lightMode={true} />
-        <button
-          onClick={onSwitchToHost}
-          className="text-xs font-black uppercase text-[#141414] bg-white px-2 py-1 border-2 border-[#141414] shadow-[2px_2px_0px_0px_#141414] hover:bg-[#FF6633] hover:text-white transition"
-        >
-          Host Laptop View
-        </button>
       </header>
 
       {/* Main Content Card */}

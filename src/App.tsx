@@ -6,6 +6,7 @@ import { PlayerLanding } from './components/PlayerLanding';
 import { PlayerGame } from './components/PlayerGame';
 import { PlayerResult } from './components/PlayerResult';
 import { InstagramScreen } from './components/InstagramScreen';
+import { AdminLogin } from './components/AdminLogin';
 
 const STATS_KEY = 'yi_mitwpu_stall_stats_2026';
 
@@ -17,6 +18,13 @@ export default function App() {
       if (params.get('mode') === 'host') return 'host';
     }
     return 'player';
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('yi_admin_authenticated') === 'true';
+    }
+    return false;
   });
 
   const [sessionCode, setSessionCode] = useState<string>(() => {
@@ -90,6 +98,17 @@ export default function App() {
     }
   };
 
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('yi_admin_authenticated', 'true');
+    }
+  };
+
+  const handleCancelLogin = () => {
+    handleSwitchToPlayer();
+  };
+
   // Reset local stall counter
   const handleResetStats = () => {
     if (confirm('Are you sure you want to reset the stall game counter to 0?')) {
@@ -136,6 +155,14 @@ export default function App() {
 
   // Render Host Screen vs Player Screen Stages
   if (mode === 'host') {
+    if (!isAuthenticated) {
+      return (
+        <AdminLogin
+          onLoginSuccess={handleLoginSuccess}
+          onCancel={handleCancelLogin}
+        />
+      );
+    }
     return (
       <HostScreen
         stats={stallStats}
@@ -152,7 +179,6 @@ export default function App() {
         <PlayerLanding
           sessionCode={sessionCode}
           onStartGame={handleStartGame}
-          onSwitchToHost={handleSwitchToHost}
         />
       )}
 
@@ -171,7 +197,6 @@ export default function App() {
       {playerStage === 'instagram' && (
         <InstagramScreen
           onRestartGame={handleRestartGame}
-          onSwitchToHost={handleSwitchToHost}
         />
       )}
     </div>
