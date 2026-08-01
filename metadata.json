@@ -1,0 +1,8 @@
+{
+  "name": "Crack the Code — Yi MIT-WPU",
+  "description": "30-Second Brutal Crossword Stall Game for Shubharambh MIT-WPU fest featuring Host and Player screens.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
