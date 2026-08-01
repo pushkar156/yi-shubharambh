@@ -20,10 +20,10 @@ export interface PillarClue {
 
 export const APP_CONFIG = {
   // [INSTAGRAM_HANDLE] — Your Instagram username without @
-  INSTAGRAM_HANDLE: "yi_mitwpu",
+  INSTAGRAM_HANDLE: "youngindians_mitwpu",
 
   // [INSTAGRAM_PROFILE_URL] — Direct link to your Instagram page
-  INSTAGRAM_PROFILE_URL: "https://www.instagram.com/yi_mitwpu",
+  INSTAGRAM_PROFILE_URL: "https://www.instagram.com/youngindians_mitwpu",
 
   // [CLUB_LOGO] — Path to image file or custom logo asset URL
   CLUB_LOGO_URL: "/assets/yi-mitwpu-logo.png",
