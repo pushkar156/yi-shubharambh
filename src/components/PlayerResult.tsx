@@ -54,10 +54,11 @@ export const PlayerResult: React.FC<PlayerResultProps> = ({
     <div className="min-h-screen bg-[#F3F4F6] text-[#141414] flex flex-col justify-between p-4 sm:p-6 font-sans selection:bg-[#FF6633] selection:text-white">
       <main className="my-auto py-6 flex flex-col items-center text-center space-y-6 max-w-md mx-auto w-full bg-white border-4 border-[#141414] p-6 shadow-[10px_10px_0px_0px_#141414]">
         {/* Banner Badge */}
+        {/* Banner Badge */}
         {isVictorious ? (
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#138808] text-white text-xs font-black uppercase tracking-wider border-2 border-[#141414] shadow-[3px_3px_0px_0px_#141414] animate-bounce">
             <Trophy className="w-4 h-4 text-white" />
-            <span>1 IN 100 LEGEND! CRACKED IT!</span>
+            <span>CRACKED IT! CHAMPION!</span>
           </div>
         ) : (
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#FF6633] text-white text-xs font-black uppercase tracking-wider border-2 border-[#141414] shadow-[3px_3px_0px_0px_#141414]">
@@ -72,11 +73,8 @@ export const PlayerResult: React.FC<PlayerResultProps> = ({
             <h1 className="text-3xl sm:text-4xl font-black tracking-tighter uppercase leading-tight">
               UNBELIEVABLE SPEED!
             </h1>
-            <p className="text-[#141414] font-bold text-sm sm:text-base">
-              You solved all 3 pillars in <span className="bg-[#138808] text-white px-2 py-0.5 font-black border border-[#141414]">{timeElapsed} seconds</span>!
-            </p>
             <div className="bg-[#FF6633] text-white border-2 border-[#141414] p-2.5 font-black text-xs uppercase tracking-tight shadow-[3px_3px_0px_0px_#141414] text-center">
-              🎉 Show this screen to the host to claim your Yi Sticker! 🎁
+              🎉 Show this screen to the host to claim your Sticker! 🎁
             </div>
           </div>
         ) : (

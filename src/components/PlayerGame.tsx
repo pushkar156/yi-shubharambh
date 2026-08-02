@@ -14,6 +14,12 @@ export const PlayerGame: React.FC<PlayerGameProps> = ({ onFinishGame }) => {
 
   const startTimeRef = useRef<number>(Date.now());
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Track solvedWordIds in a ref so the timer effect doesn't need it as a dependency
+  const solvedWordIdsRef = useRef<string[]>([]);
+  useEffect(() => {
+    solvedWordIdsRef.current = solvedWordIds;
+  }, [solvedWordIds]);
 
   // Pillar definitions from config
   const pillars = APP_CONFIG.PILLARS;
@@ -28,7 +34,7 @@ export const PlayerGame: React.FC<PlayerGameProps> = ({ onFinishGame }) => {
     });
   }, []);
 
-  // Timer Countdown Effect
+  // Timer Countdown Effect (Runs only once on mount)
   useEffect(() => {
     startTimeRef.current = Date.now();
 
@@ -38,7 +44,7 @@ export const PlayerGame: React.FC<PlayerGameProps> = ({ onFinishGame }) => {
           clearInterval(timerIntervalRef.current as NodeJS.Timeout);
           sound.playTimeUp();
           const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000);
-          onFinishGame(solvedWordIds, elapsed);
+          onFinishGame(solvedWordIdsRef.current, elapsed);
           return 0;
         }
 
@@ -51,7 +57,7 @@ export const PlayerGame: React.FC<PlayerGameProps> = ({ onFinishGame }) => {
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [onFinishGame, solvedWordIds]);
+  }, [onFinishGame]);
 
   // Check victory condition
   useEffect(() => {

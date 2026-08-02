@@ -104,7 +104,7 @@ export const HostScreen: React.FC<HostScreenProps> = ({
             </h1>
 
             <p className="text-[#141414] text-lg font-bold">
-              Find all 3 pillars in under 30 seconds and win a cool <span className="bg-[#FF6633] text-white px-2 py-0.5 font-black border border-[#141414]">Yi Sticker</span>! 🎁
+              Find all 3 pillars in under 30 seconds and win a cool <span className="bg-[#FF6633] text-white px-2 py-0.5 font-black border border-[#141414]">Sticker</span>! 🎁
             </p>
           </div>
 
@@ -185,7 +185,7 @@ export const HostScreen: React.FC<HostScreenProps> = ({
                 {stats.gamesWon}
               </span>
               <span className="text-[10px] font-black uppercase tracking-widest mt-1 opacity-90">
-                1 IN 100 WINNERS
+                TOTAL WINS
               </span>
             </div>
           </div>

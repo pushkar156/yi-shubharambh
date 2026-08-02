@@ -86,7 +86,7 @@ export const InstagramScreen: React.FC<InstagramScreenProps> = ({
                   STALL TEAM GIFT PERK
                 </p>
                 <p className="text-xs font-bold leading-snug">
-                  Show this screen to our stall team right now to claim your exclusive Yi MIT-WPU welcome sticker!
+                  Show this screen to our stall team right now to claim your exclusive welcome sticker!
                 </p>
               </div>
             </div>
