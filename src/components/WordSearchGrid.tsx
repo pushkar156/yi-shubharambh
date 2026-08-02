@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { APP_CONFIG } from '../config';
 import { sound } from '../utils/sound';
-import { Check, AlertCircle } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface WordSearchGridProps {
   solvedWordIds: string[];
@@ -9,53 +9,98 @@ interface WordSearchGridProps {
   disabled?: boolean;
 }
 
-// 10x10 layout designed with overlaps:
-// - CREATE (Horizontal) at Row 3, Cols 2-7
-// - IMPACT (Vertical) at Row 0-5, Col 5 (overlaps with CREATE at Row 3, Col 5 'A')
-// - LEAD (Vertical) at Row 2-5, Col 4 (overlaps with CREATE at Row 3, Col 4 'E')
-const GRID_LETTERS = [
-  ['Q', 'Z', 'X', 'W', 'K', 'I', 'O', 'P', 'N', 'B'], // Row 0
-  ['Y', 'A', 'H', 'F', 'R', 'M', 'U', 'V', 'S', 'G'], // Row 1
-  ['T', 'V', 'K', 'J', 'L', 'P', 'D', 'R', 'E', 'W'], // Row 2
-  ['O', 'N', 'C', 'R', 'E', 'A', 'T', 'E', 'X', 'Z'], // Row 3
-  ['B', 'W', 'Q', 'Y', 'A', 'C', 'S', 'O', 'K', 'M'], // Row 4
-  ['P', 'D', 'F', 'G', 'D', 'T', 'H', 'I', 'Z', 'L'], // Row 5
-  ['X', 'K', 'V', 'Z', 'N', 'R', 'B', 'Y', 'Q', 'W'], // Row 6
-  ['J', 'O', 'U', 'M', 'E', 'C', 'W', 'X', 'K', 'A'], // Row 7
-  ['R', 'B', 'T', 'H', 'Y', 'G', 'P', 'O', 'I', 'U'], // Row 8
-  ['H', 'E', 'A', 'D', 'T', 'M', 'Q', 'Z', 'W', 'R']  // Row 9
-];
+// WordSearch Generator function that dynamically places LEAD, CREATE, and IMPACT
+function generateRandomWordSearch() {
+  const size = 10;
+  const grid: string[][] = Array(size)
+    .fill(null)
+    .map(() => Array(size).fill(''));
 
-export const WORD_LOCATIONS: Record<string, { cells: { row: number; col: number }[] }> = {
-  CREATE: {
-    cells: [
-      { row: 3, col: 2 },
-      { row: 3, col: 3 },
-      { row: 3, col: 4 },
-      { row: 3, col: 5 },
-      { row: 3, col: 6 },
-      { row: 3, col: 7 }
-    ]
-  },
-  IMPACT: {
-    cells: [
-      { row: 0, col: 5 },
-      { row: 1, col: 5 },
-      { row: 2, col: 5 },
-      { row: 3, col: 5 },
-      { row: 4, col: 5 },
-      { row: 5, col: 5 }
-    ]
-  },
-  LEAD: {
-    cells: [
-      { row: 2, col: 4 },
-      { row: 3, col: 4 },
-      { row: 4, col: 4 },
-      { row: 5, col: 4 }
-    ]
+  const words = [
+    { id: 'CREATE', word: 'CREATE' },
+    { id: 'IMPACT', word: 'IMPACT' },
+    { id: 'LEAD', word: 'LEAD' },
+  ];
+
+  const wordLocations: Record<string, { cells: { row: number; col: number }[] }> = {};
+
+  const tryPlaceWord = (wordObj: { id: string; word: string }): boolean => {
+    const directions = [
+      { rStep: 0, cStep: 1 }, // Horizontal (across)
+      { rStep: 1, cStep: 0 }, // Vertical (down)
+      { rStep: 1, cStep: 1 }, // Diagonal (down-right)
+    ];
+
+    // Try up to 200 attempts for each word to find a conflict-free starting spot
+    for (let attempts = 0; attempts < 200; attempts++) {
+      const dir = directions[Math.floor(Math.random() * directions.length)];
+      const startRow = Math.floor(Math.random() * size);
+      const startCol = Math.floor(Math.random() * size);
+
+      const endRow = startRow + (wordObj.word.length - 1) * dir.rStep;
+      const endCol = startCol + (wordObj.word.length - 1) * dir.cStep;
+
+      // Out of bounds check
+      if (endRow >= size || endCol >= size) {
+        continue;
+      }
+
+      // Check overlapping letter conflict
+      let conflict = false;
+      const cells = [];
+      for (let i = 0; i < wordObj.word.length; i++) {
+        const r = startRow + i * dir.rStep;
+        const c = startCol + i * dir.cStep;
+        const currentLetter = grid[r][c];
+        const targetLetter = wordObj.word[i];
+
+        if (currentLetter !== '' && currentLetter !== targetLetter) {
+          conflict = true;
+          break;
+        }
+        cells.push({ row: r, col: c });
+      }
+
+      if (!conflict) {
+        // Place letters
+        for (let i = 0; i < wordObj.word.length; i++) {
+          const r = cells[i].row;
+          const c = cells[i].col;
+          grid[r][c] = wordObj.word[i];
+        }
+        wordLocations[wordObj.id] = { cells };
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Attempt to place all words
+  let success = true;
+  for (const w of words) {
+    if (!tryPlaceWord(w)) {
+      success = false;
+      break;
+    }
   }
-};
+
+  // If placement failed (collided completely), retry from scratch
+  if (!success) {
+    return generateRandomWordSearch();
+  }
+
+  // Fill in all other empty slots with random letters (A-Z)
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (grid[r][c] === '') {
+        grid[r][c] = alphabet[Math.floor(Math.random() * alphabet.length)];
+      }
+    }
+  }
+
+  return { grid, wordLocations };
+}
 
 const getCellsInLine = (
   start: { row: number; col: number },
@@ -80,7 +125,7 @@ const getCellsInLine = (
   for (let i = 0; i <= steps; i++) {
     cells.push({
       row: start.row + i * rowStep,
-      col: start.col + i * colStep
+      col: start.col + i * colStep,
     });
   }
   return cells;
@@ -89,8 +134,13 @@ const getCellsInLine = (
 export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
   solvedWordIds,
   onWordSolved,
-  disabled = false
+  disabled = false,
 }) => {
+  // Generate random grid once on component mount
+  const { gridLetters, wordLocations } = useMemo(() => {
+    return generateRandomWordSearch();
+  }, []);
+
   const [selectedPath, setSelectedPath] = useState<{ row: number; col: number }[]>([]);
   const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null);
   const [invalidSelection, setInvalidSelection] = useState<boolean>(false);
@@ -110,19 +160,19 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
     if (path.length < 2) return true;
     const p1 = path[path.length - 2];
     const p2 = path[path.length - 1];
-    
+
     const expectedRowDiff = p2.row - p1.row;
     const expectedColDiff = p2.col - p1.col;
-    
+
     const actualRowDiff = next.row - p2.row;
     const actualColDiff = next.col - p2.col;
-    
+
     return actualRowDiff === expectedRowDiff && actualColDiff === expectedColDiff;
   };
 
   const isPartialWordMatch = (word: string, solvedWordIds: string[]): boolean => {
-    const targets = APP_CONFIG.PILLARS.filter(p => !solvedWordIds.includes(p.id));
-    return targets.some(p => {
+    const targets = APP_CONFIG.PILLARS.filter((p) => !solvedWordIds.includes(p.id));
+    return targets.some((p) => {
       const targetWord = p.word;
       const revTargetWord = targetWord.split('').reverse().join('');
       return targetWord.startsWith(word) || revTargetWord.startsWith(word);
@@ -132,16 +182,16 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
   // Compile solved cells for green highlights
   const solvedCells = useMemo(() => {
     const solved = new Set<string>();
-    solvedWordIds.forEach(id => {
-      const loc = WORD_LOCATIONS[id];
+    solvedWordIds.forEach((id) => {
+      const loc = wordLocations[id];
       if (loc) {
-        loc.cells.forEach(c => {
+        loc.cells.forEach((c) => {
           solved.add(`${c.row}-${c.col}`);
         });
       }
     });
     return solved;
-  }, [solvedWordIds]);
+  }, [solvedWordIds, wordLocations]);
 
   // Compute active selection path
   const currentSelectionPath = useMemo(() => {
@@ -154,15 +204,15 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
 
   const selectionKeys = useMemo(() => {
     const keys = new Set<string>();
-    currentSelectionPath.forEach(c => keys.add(`${c.row}-${c.col}`));
+    currentSelectionPath.forEach((c) => keys.add(`${c.row}-${c.col}`));
     return keys;
   }, [currentSelectionPath]);
 
   // Get string from active path
   const selectedText = useMemo(() => {
     if (currentSelectionPath.length === 0) return '';
-    return currentSelectionPath.map(c => GRID_LETTERS[c.row][c.col]).join('');
-  }, [currentSelectionPath]);
+    return currentSelectionPath.map((c) => gridLetters[c.row][c.col]).join('');
+  }, [currentSelectionPath, gridLetters]);
 
   const handleCellClick = (r: number, c: number) => {
     if (disabled || invalidSelection) return;
@@ -193,12 +243,12 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
         // If it continues the direction
         if (continuesDirection(selectedPath, clickedCell)) {
           const newPath = [...selectedPath, clickedCell];
-          const word = newPath.map(cell => GRID_LETTERS[cell.row][cell.col]).join('');
+          const word = newPath.map((cell) => gridLetters[cell.row][cell.col]).join('');
           const revWord = word.split('').reverse().join('');
 
           // Check if it matches any target word
           const matchedPillar = APP_CONFIG.PILLARS.find(
-            p => p.word === word || p.word === revWord
+            (p) => p.word === word || p.word === revWord
           );
 
           if (matchedPillar && !solvedWordIds.includes(matchedPillar.id)) {
@@ -235,11 +285,11 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
       const path = getCellsInLine(startCell, clickedCell);
 
       if (path.length > 0) {
-        const selectedWord = path.map(cell => GRID_LETTERS[cell.row][cell.col]).join('');
+        const selectedWord = path.map((cell) => gridLetters[cell.row][cell.col]).join('');
         const reversedWord = selectedWord.split('').reverse().join('');
 
         const matchedPillar = APP_CONFIG.PILLARS.find(
-          p => p.word === selectedWord || p.word === reversedWord
+          (p) => p.word === selectedWord || p.word === reversedWord
         );
 
         if (matchedPillar && !solvedWordIds.includes(matchedPillar.id)) {
@@ -276,7 +326,7 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
       {/* Game Instruction Info Box */}
       <div className="mb-3 bg-white border-2 border-[#141414] p-3 text-center shadow-[3px_3px_0px_0px_#141414] w-full max-w-[360px] sm:max-w-[400px]">
         <p className="text-xs font-black uppercase leading-tight text-[#141414]">
-          {selectedPath.length > 0 
+          {selectedPath.length > 0
             ? `Selection: ${selectedText || 'Tapping...'}`
             : 'Tap letters in sequence OR tap start and then end!'}
         </p>
@@ -285,7 +335,7 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
       {/* 10x10 Word Search Grid */}
       <div className="bg-white p-2.5 sm:p-3 border-4 border-[#141414] shadow-[8px_8px_0px_0px_#141414] w-full aspect-square max-w-[360px] sm:max-w-[400px]">
         <div className="grid grid-cols-10 gap-0.5 sm:gap-1 h-full w-full">
-          {GRID_LETTERS.map((rowArr, r) =>
+          {gridLetters.map((rowArr, r) =>
             rowArr.map((letter, c) => {
               const cellKey = `${r}-${c}`;
               const isSolved = solvedCells.has(cellKey);
@@ -293,8 +343,9 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
               const isStart = selectedPath[0]?.row === r && selectedPath[0]?.col === c;
 
               // Compute background styling
-              let cellClass = 'bg-white text-[#141414] hover:bg-[#F3F4F6] border border-[#E5E7EB]';
-              
+              let cellClass =
+                'bg-white text-[#141414] hover:bg-[#F3F4F6] border border-[#E5E7EB]';
+
               if (isSolved) {
                 cellClass = 'bg-[#138808] text-white border border-[#141414] font-black';
               } else if (isSelected) {
@@ -315,7 +366,7 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
                   className={`relative flex items-center justify-center font-black text-sm sm:text-base transition-all duration-100 select-none aspect-square ${cellClass}`}
                 >
                   {isSolved && (
-                    <Check className="absolute top-0.5 right-0.5 w-2 h-2 sm:w-2.5 sm:h-2.5 text-white opacity-80" />
+                    <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-white opacity-85" />
                   )}
                   <span className="leading-none uppercase">{letter}</span>
                 </button>
