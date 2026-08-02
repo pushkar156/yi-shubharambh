@@ -7,6 +7,7 @@ import { PlayerGame } from './components/PlayerGame';
 import { PlayerResult } from './components/PlayerResult';
 import { InstagramScreen } from './components/InstagramScreen';
 import { AdminLogin } from './components/AdminLogin';
+import { supabase } from './utils/supabaseClient';
 
 const STATS_KEY = 'yi_mitwpu_stall_stats_2026';
 
@@ -53,7 +54,7 @@ export default function App() {
     return { gamesPlayed: 0, gamesWon: 0 };
   });
 
-  // Save stall stats on change
+  // Save stall stats locally on change (as a backup)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -63,6 +64,65 @@ export default function App() {
       }
     }
   }, [stallStats]);
+
+  // Query Supabase for total counts on mount and subscribe to real-time additions
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        // Fetch total played count
+        const { count: playedCount, error: playedError } = await supabase
+          .from('games')
+          .select('*', { count: 'exact', head: true });
+
+        if (playedError) throw playedError;
+
+        // Fetch won count
+        const { count: wonCount, error: wonError } = await supabase
+          .from('games')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'won');
+
+        if (wonError) throw wonError;
+
+        setStallStats({
+          gamesPlayed: playedCount || 0,
+          gamesWon: wonCount || 0
+        });
+      } catch (err) {
+        console.error('Error fetching game counts from Supabase:', err);
+      }
+    };
+
+    fetchCounts();
+
+    // Subscribe to INSERT changes in public.games
+    const subscription = supabase
+      .channel('realtime-games-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'games'
+        },
+        (payload) => {
+          const newGame = payload.new as { status: string };
+          setStallStats((prev) => {
+            const nextPlayed = prev.gamesPlayed + 1;
+            const nextWon = newGame.status === 'won' ? prev.gamesWon + 1 : prev.gamesWon;
+            return {
+              gamesPlayed: nextPlayed,
+              gamesWon: nextWon
+            };
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
 
   // Handle URL change or popstate
   useEffect(() => {
@@ -109,35 +169,61 @@ export default function App() {
     handleSwitchToPlayer();
   };
 
-  // Reset local stall counter
-  const handleResetStats = () => {
-    if (confirm('Are you sure you want to reset the stall game counter to 0?')) {
+  // Reset local stall counter and remote Supabase database
+  const handleResetStats = async () => {
+    if (confirm('Are you sure you want to reset the stall game counter to 0 in both LocalStorage AND Supabase?')) {
       const resetData = { gamesPlayed: 0, gamesWon: 0 };
       setStallStats(resetData);
+      try {
+        localStorage.setItem(STATS_KEY, JSON.stringify(resetData));
+        // Delete all rows in games table to reset count
+        const { error } = await supabase.from('games').delete().neq('status', '');
+        if (error) console.error('Error resetting database in Supabase:', error);
+      } catch (err) {
+        console.error('Network error resetting database in Supabase:', err);
+      }
     }
   };
 
   // Player Flow Actions
-  const handleStartGame = () => {
-    // Increment games played
+  const handleStartGame = async () => {
+    // Increment games played locally
     setStallStats((prev) => ({
       ...prev,
       gamesPlayed: prev.gamesPlayed + 1,
       lastPlayedAt: new Date().toISOString(),
     }));
     setPlayerStage('playing');
+
+    // Async log play to Supabase
+    try {
+      const { error } = await supabase.from('games').insert([{ status: 'played' }]);
+      if (error) console.error('Error logging play to Supabase:', error);
+    } catch (err) {
+      console.error('Network error logging play to Supabase:', err);
+    }
   };
 
-  const handleFinishGame = useCallback((solvedWordIds: string[], timeElapsed: number) => {
+  const handleFinishGame = useCallback(async (solvedWordIds: string[], timeElapsed: number) => {
     setLastSolvedWordIds(solvedWordIds);
     setLastTimeElapsed(timeElapsed);
 
     const totalPillars = APP_CONFIG.PILLARS.length;
-    if (solvedWordIds.length === totalPillars) {
+    const isWon = solvedWordIds.length === totalPillars;
+
+    if (isWon) {
       setStallStats((prev) => ({
         ...prev,
         gamesWon: prev.gamesWon + 1,
       }));
+
+      // Async log win to Supabase
+      try {
+        const { error } = await supabase.from('games').insert([{ status: 'won' }]);
+        if (error) console.error('Error logging win to Supabase:', error);
+      } catch (err) {
+        console.error('Network error logging win to Supabase:', err);
+      }
     }
 
     setPlayerStage('result');

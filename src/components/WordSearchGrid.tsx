@@ -91,9 +91,43 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
   onWordSolved,
   disabled = false
 }) => {
-  const [startCell, setStartCell] = useState<{ row: number; col: number } | null>(null);
+  const [selectedPath, setSelectedPath] = useState<{ row: number; col: number }[]>([]);
   const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null);
   const [invalidSelection, setInvalidSelection] = useState<boolean>(false);
+
+  // Helper functions for adjacency & direction checking
+  const isAdjacent = (
+    a: { row: number; col: number },
+    b: { row: number; col: number }
+  ): boolean => {
+    return Math.abs(a.row - b.row) <= 1 && Math.abs(a.col - b.col) <= 1;
+  };
+
+  const continuesDirection = (
+    path: { row: number; col: number }[],
+    next: { row: number; col: number }
+  ): boolean => {
+    if (path.length < 2) return true;
+    const p1 = path[path.length - 2];
+    const p2 = path[path.length - 1];
+    
+    const expectedRowDiff = p2.row - p1.row;
+    const expectedColDiff = p2.col - p1.col;
+    
+    const actualRowDiff = next.row - p2.row;
+    const actualColDiff = next.col - p2.col;
+    
+    return actualRowDiff === expectedRowDiff && actualColDiff === expectedColDiff;
+  };
+
+  const isPartialWordMatch = (word: string, solvedWordIds: string[]): boolean => {
+    const targets = APP_CONFIG.PILLARS.filter(p => !solvedWordIds.includes(p.id));
+    return targets.some(p => {
+      const targetWord = p.word;
+      const revTargetWord = targetWord.split('').reverse().join('');
+      return targetWord.startsWith(word) || revTargetWord.startsWith(word);
+    });
+  };
 
   // Compile solved cells for green highlights
   const solvedCells = useMemo(() => {
@@ -111,9 +145,12 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
 
   // Compute active selection path
   const currentSelectionPath = useMemo(() => {
-    if (!startCell || !hoveredCell) return [];
-    return getCellsInLine(startCell, hoveredCell);
-  }, [startCell, hoveredCell]);
+    if (selectedPath.length === 0) return [];
+    if (selectedPath.length === 1 && hoveredCell) {
+      return getCellsInLine(selectedPath[0], hoveredCell);
+    }
+    return selectedPath;
+  }, [selectedPath, hoveredCell]);
 
   const selectionKeys = useMemo(() => {
     const keys = new Set<string>();
@@ -130,22 +167,74 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
   const handleCellClick = (r: number, c: number) => {
     if (disabled || invalidSelection) return;
 
-    if (!startCell) {
+    const clickedCell = { row: r, col: c };
+
+    if (selectedPath.length === 0) {
       sound.playKeyTap();
-      setStartCell({ row: r, col: c });
-      setHoveredCell({ row: r, col: c });
+      setSelectedPath([clickedCell]);
+      setHoveredCell(clickedCell);
     } else {
-      // If clicked the same cell, cancel selection
-      if (startCell.row === r && startCell.col === c) {
+      // If clicked the very last cell in the path, undo it
+      const lastCell = selectedPath[selectedPath.length - 1];
+      if (lastCell.row === r && lastCell.col === c) {
         sound.playKeyTap();
-        setStartCell(null);
-        setHoveredCell(null);
+        const newPath = selectedPath.slice(0, -1);
+        setSelectedPath(newPath);
+        if (newPath.length > 0) {
+          setHoveredCell(newPath[newPath.length - 1]);
+        } else {
+          setHoveredCell(null);
+        }
         return;
       }
 
-      const path = getCellsInLine(startCell, { row: r, col: c });
+      // Check if it's adjacent to the last cell in path
+      if (isAdjacent(lastCell, clickedCell)) {
+        // If it continues the direction
+        if (continuesDirection(selectedPath, clickedCell)) {
+          const newPath = [...selectedPath, clickedCell];
+          const word = newPath.map(cell => GRID_LETTERS[cell.row][cell.col]).join('');
+          const revWord = word.split('').reverse().join('');
+
+          // Check if it matches any target word
+          const matchedPillar = APP_CONFIG.PILLARS.find(
+            p => p.word === word || p.word === revWord
+          );
+
+          if (matchedPillar && !solvedWordIds.includes(matchedPillar.id)) {
+            // Found!
+            onWordSolved(matchedPillar.id);
+            setSelectedPath([]);
+            setHoveredCell(null);
+            return;
+          }
+
+          // Check if this new path is a valid prefix of any unsolved word
+          if (isPartialWordMatch(word, solvedWordIds)) {
+            sound.playKeyTap();
+            setSelectedPath(newPath);
+            setHoveredCell(clickedCell);
+          } else {
+            // Not a valid prefix anymore (wrong letter clicked in sequence)
+            sound.playTick(true);
+            setSelectedPath(newPath);
+            setInvalidSelection(true);
+            setTimeout(() => {
+              setInvalidSelection(false);
+              setSelectedPath([]);
+              setHoveredCell(null);
+            }, 800);
+          }
+          return;
+        }
+      }
+
+      // If not adjacent or doesn't continue direction, treat as Start-End tap
+      // The start cell is the first cell in selectedPath
+      const startCell = selectedPath[0];
+      const path = getCellsInLine(startCell, clickedCell);
+
       if (path.length > 0) {
-        // Evaluate the word selected
         const selectedWord = path.map(cell => GRID_LETTERS[cell.row][cell.col]).join('');
         const reversedWord = selectedWord.split('').reverse().join('');
 
@@ -154,32 +243,31 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
         );
 
         if (matchedPillar && !solvedWordIds.includes(matchedPillar.id)) {
-          // Success!
           onWordSolved(matchedPillar.id);
-          setStartCell(null);
+          setSelectedPath([]);
           setHoveredCell(null);
         } else {
-          // Fail
           sound.playTick(true);
+          // Set selection path to the full line to show it flashing red
+          setSelectedPath(path);
           setInvalidSelection(true);
-          // Briefly show red failure state before resetting selection
           setTimeout(() => {
             setInvalidSelection(false);
-            setStartCell(null);
+            setSelectedPath([]);
             setHoveredCell(null);
           }, 800);
         }
       } else {
-        // Not a straight line, make this cell the new start
+        // Not a straight line at all from the start, reset selection to this new cell
         sound.playKeyTap();
-        setStartCell({ row: r, col: c });
-        setHoveredCell({ row: r, col: c });
+        setSelectedPath([clickedCell]);
+        setHoveredCell(clickedCell);
       }
     }
   };
 
   const handleCellMouseEnter = (r: number, c: number) => {
-    if (disabled || !startCell || invalidSelection) return;
+    if (disabled || selectedPath.length !== 1 || invalidSelection) return;
     setHoveredCell({ row: r, col: c });
   };
 
@@ -188,9 +276,9 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
       {/* Game Instruction Info Box */}
       <div className="mb-3 bg-white border-2 border-[#141414] p-3 text-center shadow-[3px_3px_0px_0px_#141414] w-full max-w-[360px] sm:max-w-[400px]">
         <p className="text-xs font-black uppercase leading-tight text-[#141414]">
-          {startCell 
+          {selectedPath.length > 0 
             ? `Selection: ${selectedText || 'Tapping...'}`
-            : 'Tap the start letter, then the end letter of a word!'}
+            : 'Tap letters in sequence OR tap start and then end!'}
         </p>
       </div>
 
@@ -202,7 +290,7 @@ export const WordSearchGrid: React.FC<WordSearchGridProps> = ({
               const cellKey = `${r}-${c}`;
               const isSolved = solvedCells.has(cellKey);
               const isSelected = selectionKeys.has(cellKey);
-              const isStart = startCell?.row === r && startCell?.col === c;
+              const isStart = selectedPath[0]?.row === r && selectedPath[0]?.col === c;
 
               // Compute background styling
               let cellClass = 'bg-white text-[#141414] hover:bg-[#F3F4F6] border border-[#E5E7EB]';
