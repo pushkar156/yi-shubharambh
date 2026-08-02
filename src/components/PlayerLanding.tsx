@@ -45,7 +45,7 @@ export const PlayerLanding: React.FC<PlayerLandingProps> = ({
               SECRET STALL HINT
             </span>
             <p className="text-xs sm:text-sm font-black leading-snug">
-              Psst — our wall behind the laptop has a clue. Our 3 pillars are hiding in this grid. Find them in 30 seconds!
+              Our wall behind the laptop has a clue. Our 3 pillars are hiding in this grid. Find them in 30 seconds!
             </p>
           </div>
         </div>
