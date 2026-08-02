@@ -6,6 +6,7 @@ import { Play, Flame, ShieldAlert, Timer, Sparkles, Lightbulb, Gift, Instagram }
 interface PlayerLandingProps {
   sessionCode?: string;
   attemptsUsed: number;
+  isHostDevice?: boolean;
   onStartGame: () => void;
   onGoToInstagram: () => void;
 }
@@ -13,6 +14,7 @@ interface PlayerLandingProps {
 export const PlayerLanding: React.FC<PlayerLandingProps> = ({
   sessionCode,
   attemptsUsed,
+  isHostDevice = false,
   onStartGame,
   onGoToInstagram,
 }) => {
@@ -77,7 +79,7 @@ export const PlayerLanding: React.FC<PlayerLandingProps> = ({
 
         {/* Start Game Action Button / Out of Attempts Warning */}
         <div className="w-full pt-2">
-          {attemptsUsed >= 2 ? (
+          {attemptsUsed >= 2 && !isHostDevice ? (
             <div className="space-y-4">
               <div className="bg-red-100 text-red-700 border-2 border-red-600 p-4 shadow-[3px_3px_0px_0px_#dc2626] font-black text-sm uppercase leading-tight text-center">
                 🚫 Out of Attempts!
@@ -107,7 +109,11 @@ export const PlayerLanding: React.FC<PlayerLandingProps> = ({
               
               <div className="flex items-center justify-between mt-2.5 px-1 text-[10px] text-slate-600 font-bold uppercase">
                 <span>Timer starts on tap!</span>
-                <span className="text-[#FF6633] font-black">Attempt {attemptsUsed + 1}/2</span>
+                {isHostDevice ? (
+                  <span className="text-[#138808] font-black">Demo Mode: Unlimited</span>
+                ) : (
+                  <span className="text-[#FF6633] font-black">Attempt {attemptsUsed + 1}/2</span>
+                )}
               </div>
             </>
           )}

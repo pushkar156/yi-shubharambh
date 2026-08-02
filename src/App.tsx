@@ -303,6 +303,7 @@ export default function App() {
         <PlayerLanding
           sessionCode={sessionCode}
           attemptsUsed={attemptsUsed}
+          isHostDevice={isAuthenticated}
           onStartGame={handleStartGame}
           onGoToInstagram={() => setPlayerStage('instagram')}
         />
