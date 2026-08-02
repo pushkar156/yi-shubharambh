@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { APP_CONFIG, PillarClue } from '../config';
-import { CrosswordGrid } from './CrosswordGrid';
+import { APP_CONFIG } from '../config';
+import { WordSearchGrid } from './WordSearchGrid';
 import { sound } from '../utils/sound';
-import { Timer, CheckCircle, AlertTriangle, Lightbulb, Sparkles } from 'lucide-react';
+import { Timer, CheckCircle, Lightbulb } from 'lucide-react';
 
 interface PlayerGameProps {
   onFinishGame: (solvedWordIds: string[], timeElapsed: number) => void;
@@ -10,11 +10,7 @@ interface PlayerGameProps {
 
 export const PlayerGame: React.FC<PlayerGameProps> = ({ onFinishGame }) => {
   const [timeLeft, setTimeLeft] = useState<number>(APP_CONFIG.GAME_TIMER_SECONDS);
-  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [solvedWordIds, setSolvedWordIds] = useState<string[]>([]);
-  const [activeWordId, setActiveWordId] = useState<string | null>('CREATE'); // default focus CREATE across
-  const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>({ row: 4, col: 1 });
-  const [decoyWarning, setDecoyWarning] = useState<boolean>(false);
 
   const startTimeRef = useRef<number>(Date.now());
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -22,67 +18,15 @@ export const PlayerGame: React.FC<PlayerGameProps> = ({ onFinishGame }) => {
   // Pillar definitions from config
   const pillars = APP_CONFIG.PILLARS;
 
-  // Check if a word is completely correctly entered by user
-  const checkWordSolved = useCallback(
-    (wordObj: PillarClue, currentAnswers: Record<string, string>) => {
-      for (let i = 0; i < wordObj.length; i++) {
-        const r = wordObj.direction === 'across' ? wordObj.startRow : wordObj.startRow + i;
-        const c = wordObj.direction === 'across' ? wordObj.startCol + i : wordObj.startCol;
-        const entered = (currentAnswers[`${r}-${c}`] || '').toUpperCase();
-        if (entered !== wordObj.word[i]) {
-          return false;
-        }
-      }
-      return true;
-    },
-    []
-  );
-
-  // Evaluate answers on every update
-  const handleUpdateAnswer = useCallback(
-    (r: number, c: number, letter: string) => {
-      setUserAnswers((prev) => {
-        const updated = { ...prev, [`${r}-${c}`]: letter.toUpperCase() };
-
-        // Check each pillar
-        const newlySolved: string[] = [];
-        pillars.forEach((p) => {
-          if (!solvedWordIds.includes(p.id)) {
-            if (checkWordSolved(p, updated)) {
-              newlySolved.push(p.id);
-            }
-          }
-        });
-
-        if (newlySolved.length > 0) {
-          sound.playWordSolved();
-          if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-          setSolvedWordIds((s) => [...s, ...newlySolved]);
-        }
-
-        return updated;
-      });
-
-      // Auto-advance cursor to next cell in active word if typing a letter
-      if (letter && activeWordId) {
-        const currentPillar = pillars.find((p) => p.id === activeWordId);
-        if (currentPillar) {
-          const isAcross = currentPillar.direction === 'across';
-          const nextR = isAcross ? r : r + 1;
-          const nextC = isAcross ? c + 1 : c;
-
-          // Verify next cell is within pillar boundaries
-          const maxR = isAcross ? currentPillar.startRow : currentPillar.startRow + currentPillar.length - 1;
-          const maxC = isAcross ? currentPillar.startCol + currentPillar.length - 1 : currentPillar.startCol;
-
-          if (nextR <= maxR && nextC <= maxC) {
-            setSelectedCell({ row: nextR, col: nextC });
-          }
-        }
-      }
-    },
-    [activeWordId, checkWordSolved, pillars, solvedWordIds]
-  );
+  // Handle word solved
+  const handleWordSolved = useCallback((wordId: string) => {
+    sound.playWordSolved();
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    setSolvedWordIds((prev) => {
+      if (prev.includes(wordId)) return prev;
+      return [...prev, wordId];
+    });
+  }, []);
 
   // Timer Countdown Effect
   useEffect(() => {
@@ -121,12 +65,6 @@ export const PlayerGame: React.FC<PlayerGameProps> = ({ onFinishGame }) => {
     }
   }, [solvedWordIds, pillars.length, onFinishGame]);
 
-  // Select a cell/word
-  const handleSelectCell = (r: number, c: number, wordId?: string) => {
-    setSelectedCell({ row: r, col: c });
-    if (wordId) setActiveWordId(wordId);
-  };
-
   // Timer Color Classes
   const getTimerClasses = () => {
     if (timeLeft > 15) {
@@ -157,33 +95,15 @@ export const PlayerGame: React.FC<PlayerGameProps> = ({ onFinishGame }) => {
             </span>
           </div>
         </div>
-
-        {/* Decoy Warning Alert */}
-        {decoyWarning && (
-          <div className="max-w-md mx-auto mt-2 bg-amber-400 border-2 border-[#141414] p-2.5 shadow-[3px_3px_0px_0px_#141414] flex items-center gap-2 text-xs font-black text-black">
-            <AlertTriangle className="w-4 h-4 text-black shrink-0 animate-bounce" />
-            <span>{APP_CONFIG.DECOY_CLUE.hint}</span>
-            <button
-              onClick={() => setDecoyWarning(false)}
-              className="ml-auto text-black font-black px-1"
-            >
-              ✕
-            </button>
-          </div>
-        )}
       </header>
 
       {/* Main Game Stage */}
       <main className="my-auto py-3 max-w-md mx-auto w-full space-y-4">
-        {/* Crossword Grid Component */}
-        <CrosswordGrid
-          userAnswers={userAnswers}
+        {/* Word Search Grid Component */}
+        <WordSearchGrid
           solvedWordIds={solvedWordIds}
-          activeWordId={activeWordId}
-          selectedCell={selectedCell}
-          onSelectCell={handleSelectCell}
-          onUpdateAnswer={handleUpdateAnswer}
-          onDecoyTrigger={() => setDecoyWarning(true)}
+          onWordSolved={handleWordSolved}
+          disabled={timeLeft <= 0}
         />
 
         {/* Cryptic Clues Selector Drawer */}
@@ -191,41 +111,30 @@ export const PlayerGame: React.FC<PlayerGameProps> = ({ onFinishGame }) => {
           <div className="flex items-center justify-between pb-2 border-b-2 border-[#141414]">
             <span className="text-xs font-black uppercase text-[#141414] tracking-wider flex items-center gap-1.5">
               <Lightbulb className="w-4 h-4 text-[#FF6633]" />
-              Cryptic Pillar Riddles
-            </span>
-            <span className="text-[10px] font-black bg-[#FF6633] text-white px-1.5 py-0.5 border border-[#141414]">
-              TAP CLUE
+              Pillars to Find:
             </span>
           </div>
 
           <div className="space-y-2">
             {pillars.map((pillar) => {
               const isSolved = solvedWordIds.includes(pillar.id);
-              const isActive = activeWordId === pillar.id;
 
               return (
-                <button
+                <div
                   key={`clue-${pillar.id}`}
-                  type="button"
-                  onClick={() => {
-                    setActiveWordId(pillar.id);
-                    setSelectedCell({ row: pillar.startRow, col: pillar.startCol });
-                  }}
-                  className={`w-full text-left p-3 border-2 border-[#141414] transition-all text-xs flex flex-col space-y-1 ${
+                  className={`w-full text-left p-3 border-2 border-[#141414] text-xs flex flex-col space-y-1 ${
                     isSolved
                       ? 'bg-[#138808] text-white shadow-[2px_2px_0px_0px_#141414]'
-                      : isActive
-                      ? 'bg-[#FF6633] text-white shadow-[3px_3px_0px_0px_#141414]'
-                      : 'bg-white text-[#141414] shadow-[2px_2px_0px_0px_#141414] hover:bg-[#F3F4F6]'
+                      : 'bg-white text-[#141414] shadow-[2px_2px_0px_0px_#141414]'
                   }`}
                 >
                   <div className="flex items-center justify-between font-black uppercase">
-                    <span className="flex items-center gap-1.5">
-                      <span>{pillar.id} ({pillar.hintNote})</span>
+                    <span className="flex items-center gap-1.5 font-black">
+                      <span>{pillar.id}</span>
                     </span>
                     {isSolved ? (
                       <span className="text-[10px] bg-white text-[#138808] px-1.5 py-0.5 border border-[#141414] font-black">
-                        SOLVED ✓
+                        FOUND ✓
                       </span>
                     ) : (
                       <span className="text-[10px] bg-[#141414] text-white px-1.5 py-0.5 font-black">
@@ -245,7 +154,7 @@ export const PlayerGame: React.FC<PlayerGameProps> = ({ onFinishGame }) => {
                       💡 {pillar.meaningPunch}
                     </p>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
