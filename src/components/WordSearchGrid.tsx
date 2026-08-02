@@ -99,7 +99,7 @@ function generateRandomWordSearch() {
     }
   }
 
-  return { grid, wordLocations };
+  return { gridLetters: grid, wordLocations };
 }
 
 const getCellsInLine = (
