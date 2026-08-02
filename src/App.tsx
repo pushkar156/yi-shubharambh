@@ -41,6 +41,19 @@ export default function App() {
   const [lastSolvedWordIds, setLastSolvedWordIds] = useState<string[]>([]);
   const [lastTimeElapsed, setLastTimeElapsed] = useState<number>(0);
 
+  // Track attempts used per device (Max 2)
+  const [attemptsUsed, setAttemptsUsed] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const val = localStorage.getItem('yi_mitwpu_player_attempts_2026');
+        return val ? parseInt(val, 10) : 0;
+      } catch {
+        return 0;
+      }
+    }
+    return 0;
+  });
+
   // Persistent Stall Stats
   const [stallStats, setStallStats] = useState<StallStats>(() => {
     if (typeof window !== 'undefined') {
@@ -191,6 +204,23 @@ export default function App() {
 
   // Player Flow Actions
   const handleStartGame = async () => {
+    // If they bypass somehow, enforce attempt check
+    if (attemptsUsed >= 2) {
+      setPlayerStage('instagram');
+      return;
+    }
+
+    // Increment player device attempts
+    const newAttempts = attemptsUsed + 1;
+    setAttemptsUsed(newAttempts);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('yi_mitwpu_player_attempts_2026', String(newAttempts));
+      } catch (err) {
+        // Ignore
+      }
+    }
+
     // Increment games played locally
     setStallStats((prev) => ({
       ...prev,
@@ -272,7 +302,9 @@ export default function App() {
       {playerStage === 'landing' && (
         <PlayerLanding
           sessionCode={sessionCode}
+          attemptsUsed={attemptsUsed}
           onStartGame={handleStartGame}
+          onGoToInstagram={() => setPlayerStage('instagram')}
         />
       )}
 

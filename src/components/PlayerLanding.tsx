@@ -1,16 +1,20 @@
 import React from 'react';
 import { APP_CONFIG } from '../config';
 import { BrandLogo } from './BrandLogo';
-import { Play, Flame, ShieldAlert, Timer, Sparkles, Lightbulb, Gift } from 'lucide-react';
+import { Play, Flame, ShieldAlert, Timer, Sparkles, Lightbulb, Gift, Instagram } from 'lucide-react';
 
 interface PlayerLandingProps {
   sessionCode?: string;
+  attemptsUsed: number;
   onStartGame: () => void;
+  onGoToInstagram: () => void;
 }
 
 export const PlayerLanding: React.FC<PlayerLandingProps> = ({
   sessionCode,
+  attemptsUsed,
   onStartGame,
+  onGoToInstagram,
 }) => {
   return (
     <div className="min-h-screen bg-[#F3F4F6] text-[#141414] flex flex-col justify-between p-4 sm:p-6 font-sans selection:bg-[#FF6633] selection:text-white">
@@ -71,20 +75,42 @@ export const PlayerLanding: React.FC<PlayerLandingProps> = ({
           </div>
         </div>
 
-        {/* Start Game Action Button */}
+        {/* Start Game Action Button / Out of Attempts Warning */}
         <div className="w-full pt-2">
-          <button
-            type="button"
-            onClick={onStartGame}
-            className="w-full py-4 px-6 bg-[#FF6633] hover:bg-[#141414] active:translate-x-1 active:translate-y-1 text-white font-black text-lg sm:text-xl border-4 border-[#141414] shadow-[6px_6px_0px_0px_#141414] uppercase tracking-wider flex items-center justify-center gap-3 transition-all"
-          >
-            <Play className="w-6 h-6 fill-current" />
-            <span>START 30S TIMER NOW</span>
-          </button>
-          
-          <p className="text-[11px] text-[#141414] mt-2 font-black uppercase tracking-tight">
-            Timer starts immediately when you tap Start!
-          </p>
+          {attemptsUsed >= 2 ? (
+            <div className="space-y-4">
+              <div className="bg-red-100 text-red-700 border-2 border-red-600 p-4 shadow-[3px_3px_0px_0px_#dc2626] font-black text-sm uppercase leading-tight text-center">
+                🚫 Out of Attempts!
+                <p className="text-xs font-bold mt-1 text-slate-700 normal-case">
+                  You have already played 2 times on this device. Show your previous victory screen to the stall team to claim your sticker, or follow our Instagram!
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onGoToInstagram}
+                className="w-full py-4 px-6 bg-[#FF6633] hover:bg-[#141414] active:translate-x-1 active:translate-y-1 text-white font-black text-lg border-4 border-[#141414] shadow-[6px_6px_0px_0px_#141414] uppercase tracking-wider flex items-center justify-center gap-3 transition-all"
+              >
+                <Instagram className="w-6 h-6" />
+                <span>GO TO INSTAGRAM</span>
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onStartGame}
+                className="w-full py-4 px-6 bg-[#FF6633] hover:bg-[#141414] active:translate-x-1 active:translate-y-1 text-white font-black text-lg sm:text-xl border-4 border-[#141414] shadow-[6px_6px_0px_0px_#141414] uppercase tracking-wider flex items-center justify-center gap-3 transition-all"
+              >
+                <Play className="w-6 h-6 fill-current" />
+                <span>START 30S TIMER NOW</span>
+              </button>
+              
+              <div className="flex items-center justify-between mt-2.5 px-1 text-[10px] text-slate-600 font-bold uppercase">
+                <span>Timer starts on tap!</span>
+                <span className="text-[#FF6633] font-black">Attempt {attemptsUsed + 1}/2</span>
+              </div>
+            </>
+          )}
         </div>
       </main>
 
