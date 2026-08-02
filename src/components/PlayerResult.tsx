@@ -143,7 +143,7 @@ export const PlayerResult: React.FC<PlayerResultProps> = ({
             onClick={onGoToInstagram}
             className="w-full py-4 px-6 bg-[#FF6633] hover:bg-[#141414] active:translate-x-1 active:translate-y-1 text-white font-black text-lg border-4 border-[#141414] shadow-[6px_6px_0px_0px_#141414] uppercase tracking-wider flex items-center justify-center gap-3 transition-all"
           >
-            <span>CLAIM GIFT → INSTAGRAM</span>
+            <span>{isVictorious ? 'CLAIM GIFT' : 'CONTINUE'}</span>
             <ArrowRight className="w-5 h-5" />
           </button>
         </div>

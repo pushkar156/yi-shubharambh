@@ -290,6 +290,7 @@ export default function App() {
 
       {playerStage === 'instagram' && (
         <InstagramScreen
+          isWon={lastSolvedWordIds.length === APP_CONFIG.PILLARS.length}
           onRestartGame={handleRestartGame}
         />
       )}

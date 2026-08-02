@@ -2,13 +2,15 @@ import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { APP_CONFIG } from '../config';
 import { BrandLogo } from './BrandLogo';
-import { Instagram, Gift, ExternalLink, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Instagram, Gift, ExternalLink, RefreshCw, CheckCircle2, Timer } from 'lucide-react';
 
 interface InstagramScreenProps {
+  isWon: boolean;
   onRestartGame: () => void;
 }
 
 export const InstagramScreen: React.FC<InstagramScreenProps> = ({
+  isWon,
   onRestartGame,
 }) => {
   const handleFollowClick = () => {
@@ -25,21 +27,39 @@ export const InstagramScreen: React.FC<InstagramScreenProps> = ({
       {/* Main Content */}
       <main className="my-auto py-6 flex flex-col items-center text-center space-y-6 max-w-md mx-auto w-full bg-white border-4 border-[#141414] p-6 shadow-[10px_10px_0px_0px_#141414]">
         {/* Gift / Badge Header */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF6633] text-white text-xs font-black uppercase tracking-wider border-2 border-[#141414] shadow-[2px_2px_0px_0px_#141414]">
-          <Gift className="w-4 h-4 text-white" />
-          <span>FINAL STEP — CLAIM STALL GIFT</span>
-        </div>
+        {isWon ? (
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF6633] text-white text-xs font-black uppercase tracking-wider border-2 border-[#141414] shadow-[2px_2px_0px_0px_#141414]">
+            <Gift className="w-4 h-4 text-white" />
+            <span>FINAL STEP — CLAIM STALL GIFT</span>
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF6633] text-white text-xs font-black uppercase tracking-wider border-2 border-[#141414] shadow-[2px_2px_0px_0px_#141414]">
+            <Timer className="w-4 h-4 text-white" />
+            <span>BETTER LUCK NEXT TIME!</span>
+          </div>
+        )}
 
         {/* Call to Action Title */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-black tracking-tighter uppercase leading-tight">
-            ENJOYED THAT? <br />
-            <span className="bg-[#141414] text-[#FF6633] px-2 py-0.5 inline-block mt-1">
-              FOLLOW US ON INSTAGRAM!
-            </span>
-          </h1>
+          {isWon ? (
+            <h1 className="text-3xl font-black tracking-tighter uppercase leading-tight">
+              YOU CRACKED IT! <br />
+              <span className="bg-[#141414] text-[#FF6633] px-2 py-0.5 inline-block mt-1">
+                FOLLOW US ON INSTAGRAM!
+              </span>
+            </h1>
+          ) : (
+            <h1 className="text-3xl font-black tracking-tighter uppercase leading-tight">
+              NICE TRY! <br />
+              <span className="bg-[#141414] text-[#FF6633] px-2 py-0.5 inline-block mt-1">
+                FOLLOW US ON INSTAGRAM
+              </span>
+            </h1>
+          )}
           <p className="text-[#141414] text-xs sm:text-sm font-bold">
-            Join the Young Indians (Yi) Student Chapter at MIT-WPU. Lead, Create, Impact with us!
+            {isWon
+              ? 'Join the Young Indians (Yi) Student Chapter at MIT-WPU. Lead, Create, Impact with us!'
+              : 'Better luck next time! Stay updated with the Young Indians (Yi) Student Chapter at MIT-WPU.'}
           </p>
         </div>
 
@@ -55,20 +75,22 @@ export const InstagramScreen: React.FC<InstagramScreenProps> = ({
             <ExternalLink className="w-5 h-5 opacity-80" />
           </button>
 
-          {/* Stall Gift Claim Badge */}
-          <div className="bg-[#138808] text-white border-2 border-[#141414] p-4 shadow-[3px_3px_0px_0px_#141414] flex items-center gap-3 text-left">
-            <div className="p-2 bg-[#141414] text-white border border-white shrink-0">
-              <CheckCircle2 className="w-5 h-5" />
+          {/* Stall Gift Claim Badge (Only shown to winners!) */}
+          {isWon && (
+            <div className="bg-[#138808] text-white border-2 border-[#141414] p-4 shadow-[3px_3px_0px_0px_#141414] flex items-center gap-3 text-left">
+              <div className="p-2 bg-[#141414] text-white border border-white shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide">
+                  STALL TEAM GIFT PERK
+                </p>
+                <p className="text-xs font-bold leading-snug">
+                  Show this screen to our stall team right now to claim your exclusive Yi MIT-WPU welcome sticker!
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-black uppercase tracking-wide">
-                STALL TEAM GIFT PERK
-              </p>
-              <p className="text-xs font-bold leading-snug">
-                Show this screen to our stall team right now to claim your exclusive Yi MIT-WPU welcome sticker!
-              </p>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Fallback QR Code for external device scan */}
