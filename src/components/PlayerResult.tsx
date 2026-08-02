@@ -68,13 +68,16 @@ export const PlayerResult: React.FC<PlayerResultProps> = ({
 
         {/* Hero Result Title */}
         {isVictorious ? (
-          <div className="space-y-2">
+          <div className="space-y-3 w-full">
             <h1 className="text-3xl sm:text-4xl font-black tracking-tighter uppercase leading-tight">
               UNBELIEVABLE SPEED!
             </h1>
             <p className="text-[#141414] font-bold text-sm sm:text-base">
               You solved all 3 pillars in <span className="bg-[#138808] text-white px-2 py-0.5 font-black border border-[#141414]">{timeElapsed} seconds</span>!
             </p>
+            <div className="bg-[#FF6633] text-white border-2 border-[#141414] p-2.5 font-black text-xs uppercase tracking-tight shadow-[3px_3px_0px_0px_#141414] text-center">
+              🎉 Show this screen to the host to claim your Yi Sticker! 🎁
+            </div>
           </div>
         ) : (
           <div className="space-y-2">

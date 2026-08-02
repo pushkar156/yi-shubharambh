@@ -1,7 +1,7 @@
 import React from 'react';
 import { APP_CONFIG } from '../config';
 import { BrandLogo } from './BrandLogo';
-import { Play, Flame, ShieldAlert, Timer, Sparkles, Lightbulb } from 'lucide-react';
+import { Play, Flame, ShieldAlert, Timer, Sparkles, Lightbulb, Gift } from 'lucide-react';
 
 interface PlayerLandingProps {
   sessionCode?: string;
@@ -65,9 +65,9 @@ export const PlayerLanding: React.FC<PlayerLandingProps> = ({
           </div>
 
           <div className="p-3 bg-[#F3F4F6] border-2 border-[#141414] shadow-[3px_3px_0px_0px_#141414] flex flex-col items-center">
-            <ShieldAlert className="w-5 h-5 text-[#138808] mb-1" />
-            <span className="text-xs font-black text-[#141414]">1 SHOT</span>
-            <span className="text-[9px] font-bold text-slate-600 uppercase">Are you 1/100?</span>
+            <Gift className="w-5 h-5 text-[#138808] mb-1" />
+            <span className="text-xs font-black text-[#141414]">STICKER!</span>
+            <span className="text-[9px] font-bold text-slate-600 uppercase">WIN PRIZE!</span>
           </div>
         </div>
 

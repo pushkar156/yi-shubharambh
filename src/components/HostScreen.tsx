@@ -104,7 +104,7 @@ export const HostScreen: React.FC<HostScreenProps> = ({
             </h1>
 
             <p className="text-[#141414] text-lg font-bold">
-              Are you the <span className="bg-[#138808] text-white px-2 py-0.5 font-black border border-[#141414]">1 in 100</span> who can solve our brutal 3-pillar crossword?
+              Find all 3 pillars in under 30 seconds and win a cool <span className="bg-[#FF6633] text-white px-2 py-0.5 font-black border border-[#141414]">Yi Sticker</span>! 🎁
             </p>
           </div>
 
