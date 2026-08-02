@@ -67,6 +67,8 @@ export default function App() {
 
   // Query Supabase for total counts on mount and subscribe to real-time additions
   useEffect(() => {
+    if (!supabase) return;
+
     const fetchCounts = async () => {
       try {
         // Fetch total played count
@@ -176,9 +178,11 @@ export default function App() {
       setStallStats(resetData);
       try {
         localStorage.setItem(STATS_KEY, JSON.stringify(resetData));
-        // Delete all rows in games table to reset count
-        const { error } = await supabase.from('games').delete().neq('status', '');
-        if (error) console.error('Error resetting database in Supabase:', error);
+        if (supabase) {
+          // Delete all rows in games table to reset count
+          const { error } = await supabase.from('games').delete().neq('status', '');
+          if (error) console.error('Error resetting database in Supabase:', error);
+        }
       } catch (err) {
         console.error('Network error resetting database in Supabase:', err);
       }
@@ -196,11 +200,13 @@ export default function App() {
     setPlayerStage('playing');
 
     // Async log play to Supabase
-    try {
-      const { error } = await supabase.from('games').insert([{ status: 'played' }]);
-      if (error) console.error('Error logging play to Supabase:', error);
-    } catch (err) {
-      console.error('Network error logging play to Supabase:', err);
+    if (supabase) {
+      try {
+        const { error } = await (supabase.from('games') as any).insert([{ status: 'played' }]);
+        if (error) console.error('Error logging play to Supabase:', error);
+      } catch (err) {
+        console.error('Network error logging play to Supabase:', err);
+      }
     }
   };
 
@@ -218,11 +224,13 @@ export default function App() {
       }));
 
       // Async log win to Supabase
-      try {
-        const { error } = await supabase.from('games').insert([{ status: 'won' }]);
-        if (error) console.error('Error logging win to Supabase:', error);
-      } catch (err) {
-        console.error('Network error logging win to Supabase:', err);
+      if (supabase) {
+        try {
+          const { error } = await (supabase.from('games') as any).insert([{ status: 'won' }]);
+          if (error) console.error('Error logging win to Supabase:', error);
+        } catch (err) {
+          console.error('Network error logging win to Supabase:', err);
+        }
       }
     }
 

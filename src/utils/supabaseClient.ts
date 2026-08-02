@@ -3,11 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Fallback warning if variables are not set yet
-if (!supabaseUrl || !supabaseAnonKey) {
+export let supabase: ReturnType<typeof createClient> | null = null;
+
+if (supabaseUrl && supabaseAnonKey) {
+  try {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+  } catch (err) {
+    console.error('Failed to initialize Supabase client:', err);
+  }
+} else {
   console.warn(
-    'Supabase environment variables VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY are missing. Please add them to your .env or Vercel settings.'
+    'Supabase credentials missing. Real-time cloud sync is disabled. Falling back to LocalStorage.'
   );
 }
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
