@@ -48,10 +48,10 @@ export const InstagramScreen: React.FC<InstagramScreenProps> = ({
           <button
             type="button"
             onClick={handleFollowClick}
-            className="w-full py-4 px-6 bg-[#FF6633] hover:bg-[#141414] active:translate-x-1 active:translate-y-1 text-white font-black text-lg sm:text-xl border-4 border-[#141414] shadow-[6px_6px_0px_0px_#141414] uppercase tracking-wider flex items-center justify-center gap-3 transition-all"
+            className="w-full py-4 px-6 bg-[#FF6633] hover:bg-[#141414] active:translate-x-1 active:translate-y-1 text-white font-black text-lg sm:text-xl border-4 border-[#141414] shadow-[6px_6px_0px_0px_#141414] tracking-wider flex items-center justify-center gap-3 transition-all"
           >
             <Instagram className="w-6 h-6" />
-            <span>FOLLOW @{APP_CONFIG.INSTAGRAM_HANDLE}</span>
+            <span>FOLLOW @<span className="lowercase">{APP_CONFIG.INSTAGRAM_HANDLE}</span></span>
             <ExternalLink className="w-5 h-5 opacity-80" />
           </button>
 
@@ -83,7 +83,7 @@ export const InstagramScreen: React.FC<InstagramScreenProps> = ({
               level="M"
             />
           </div>
-          <span className="text-xs text-[#141414] font-mono font-black">
+          <span className="text-xs text-[#141414] font-mono font-black lowercase">
             @{APP_CONFIG.INSTAGRAM_HANDLE}
           </span>
         </div>

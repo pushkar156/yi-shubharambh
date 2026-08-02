@@ -150,8 +150,8 @@ export const HostScreen: React.FC<HostScreenProps> = ({
                 <Instagram className="w-3.5 h-3.5" />
                 <span>FOLLOW FOR CLUE</span>
               </div>
-              <h4 className="text-xl font-black text-[#141414] uppercase leading-tight">
-                @{APP_CONFIG.INSTAGRAM_HANDLE}
+              <h4 className="text-xl font-black text-[#141414] leading-tight">
+                @<span className="lowercase">{APP_CONFIG.INSTAGRAM_HANDLE}</span>
               </h4>
               <p className="text-xs font-bold text-slate-600">
                 Scan & follow for Yi MIT-WPU goodies!
