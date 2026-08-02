@@ -26,7 +26,7 @@ export const APP_CONFIG = {
   INSTAGRAM_PROFILE_URL: "https://www.instagram.com/youngindians_mitwpu",
 
   // [CLUB_LOGO] — Path to image file or custom logo asset URL
-  CLUB_LOGO_URL: "/assets/yi-mitwpu-logo.png",
+  CLUB_LOGO_URL: "/yi-logo.jpeg",
 
   // [HOST_APP_BASE_URL] — Deployed base URL for QR codes
   // Automatically defaults to current window origin if deployed
